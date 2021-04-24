@@ -15,19 +15,21 @@ import numpy as np
 DOWNLOADED_DATA_DIRNAME = BaseDataModule.data_dirname()
 
 class MaskDataset(object):
-    def __init__(self, transforms):
+    def __init__(self, transforms, args: argparse.Namespace):
+        super().__init__(args)
         self.transforms = transforms
         # load all image files, sorting them to
         # ensure that they are aligned
-        self.imgs = list(sorted(os.listdir("C:/Practice/POC/MaskDetection/mask_detector/data/images/")))
+        #self.imgs = list(sorted(os.listdir("C:/Practice/POC/MaskDetection/mask_detector/data/images/")))
 #         self.labels = list(sorted(os.listdir("/kaggle/input/face-mask-detection/annotations/")))
 
     def __getitem__(self, idx):
         # load images ad masks
         file_image = 'maksssksksss'+ str(idx) + '.png'
         file_label = 'maksssksksss'+ str(idx) + '.xml'
-        img_path = os.path.join("C:/Practice/POC/MaskDetection/mask_detector/data/images/", file_image)
-        label_path = os.path.join("C:/Practice/POC/MaskDetection/mask_detector/data/annotations/", file_label)
+        data_path = self.args["data_path"]+"/"
+        img_path = os.path.join(data_path+"images/", file_image)
+        label_path = os.path.join(data_path+"annotations/", file_label)
         img = Image.open(img_path).convert("RGB")
         img = np.array(img) #Convert into numpy  array
         #Keep image dimension in a different location
@@ -49,6 +51,12 @@ class MaskDataset(object):
 
     def __len__(self):
         return len(self.imgs)
+
+    @staticmethod
+    def add_to_argparse(parser):
+        print("Adding model arguments")
+        parser.add_argument("--data_path", dest = "data_path", help = "Data folder where images and annotations are stored", default = '/content/drive/MyDrive/data/MaskDetection/data')
+        return parser
 
 
 class FACEMASKS(BaseDataModule):
