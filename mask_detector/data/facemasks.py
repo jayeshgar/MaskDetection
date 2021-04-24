@@ -67,6 +67,7 @@ class FACEMASKS(BaseDataModule):
 
     def __init__(self, args: argparse.Namespace) -> None:
         super().__init__(args)
+        self.args = vars(args) if args is not None else {}
         self.data_dir = DOWNLOADED_DATA_DIRNAME
         self.transform = transforms.Compose([transforms.ToTensor()])
         #self.dims = (1, 28, 28)  # dims are returned when calling `.size()` on this object.
@@ -81,7 +82,7 @@ class FACEMASKS(BaseDataModule):
         #facemasks_full = TorchMNIST(self.data_dir, train=True, transform=self.transform)
         #self.data_train, self.data_val = random_split(facemasks_full, [55000, 5000])
         #self.data_test = TorchMNIST(self.data_dir, train=False, transform=self.transform)
-        dataset = MaskDataset(self.transform)
+        dataset = MaskDataset(self.transform,self.args)
         train_idx, val_idx = train_test_split(list(range(len(dataset))), test_size=0.20)
         val_idx, test_idx = train_test_split(val_idx, test_size=0.5)
         self.data_train = Subset(dataset, train_idx)
