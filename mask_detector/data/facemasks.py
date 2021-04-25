@@ -17,6 +17,7 @@ DOWNLOADED_DATA_DIRNAME = BaseDataModule.data_dirname()
 class MaskDataset(object):
     def __init__(self, transforms, args: argparse.Namespace = None):
         #super().__init__(args)
+        self.args = vars(args) if args is not None else {}
         self.transforms = transforms
         # load all image files, sorting them to
         # ensure that they are aligned
