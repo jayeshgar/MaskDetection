@@ -15,7 +15,7 @@ import numpy as np
 DOWNLOADED_DATA_DIRNAME = BaseDataModule.data_dirname()
 
 class MaskDataset(object):
-    def __init__(self, transforms, args: argparse.Namespace):
+    def __init__(self, transforms, args: argparse.Namespace = None):
         super().__init__(args)
         self.transforms = transforms
         # load all image files, sorting them to
