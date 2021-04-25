@@ -52,13 +52,7 @@ class MaskDataset(object):
         return img, target
 
     def __len__(self):
-        return len(self.imgs)
-
-    @staticmethod
-    def add_to_argparse(parser):
-        print("Adding model arguments")
-        parser.add_argument("--data_path", dest = "data_path", help = "Data folder where images and annotations are stored", default = '/content/drive/MyDrive/data/MaskDetection/data')
-        return parser
+        return len(self.imgs)    
 
 
 class FACEMASKS(BaseDataModule):
@@ -94,7 +88,12 @@ class FACEMASKS(BaseDataModule):
         #self.data_train = torch.utils.data.DataLoader(self.data_train, batch_size=4, collate_fn=collate_fn)
         #self.data_val = torch.utils.data.DataLoader(self.data_val, batch_size=4, collate_fn=collate_fn)
         #self.data_test = torch.utils.data.DataLoader(self.data_test, batch_size=4, collate_fn=collate_fn)
-        
+
+    @staticmethod
+    def add_to_argparse(parser):
+        print("Adding model arguments")
+        parser.add_argument("--data_path", dest = "data_path", help = "Data folder where images and annotations are stored", default = '/content/drive/MyDrive/data/MaskDetection/data')
+        return parser  
 
 
 if __name__ == "__main__":
