@@ -69,6 +69,7 @@ class BaseDataModule(pl.LightningDataModule):
         parser.add_argument(
             "--num_workers", type=int, default=NUM_WORKERS, help="Number of additional processes to load data."
         )
+        parser.add_argument("--data_path", dest = "data_path", help = "Data folder where images and annotations are stored", default = '/content/drive/MyDrive/data/MaskDetection/data')
         return parser
 
     def config(self):
