@@ -76,6 +76,7 @@ def predict_transform(prediction, inp_dim, anchors, num_classes, CUDA = True):
         y_offset = y_offset.cuda()
 
     x_y_offset = torch.cat((x_offset, y_offset), 1).repeat(1,num_anchors).view(-1,2).unsqueeze(0)
+    
     if CUDA:
         prediction = prediction.cuda()
         x_y_offset = x_y_offset.cuda()

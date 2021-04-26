@@ -83,6 +83,10 @@ def yolo_loss(logits,y):
         #print("boxes = ",boxes)
         #print("scaling_factor = ",scaling_factor)
         #print("im_dim_list[0] = ",im_dim_list[0])
+        if CUDA:
+            boxes = boxes.cuda()
+            scaling_factor = scaling_factor.cuda()
+            im_dim_list = im_dim_list.cuda()
         boxes[:,[0,2]] += (416 - scaling_factor*im_dim_list[0][0])/2
         boxes[:,[1,3]] += (416 - scaling_factor*im_dim_list[0][1])/2
         boxes[:,0:4] *= scaling_factor
