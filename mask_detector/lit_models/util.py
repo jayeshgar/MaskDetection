@@ -97,7 +97,6 @@ def yolo_loss(logits,y, CUDA = True):
             loss_w = lambda_coord * mse_loss(logit[index][3],box[2])
             loss_h = lambda_coord * mse_loss(logit[index][4],box[3])
             if CUDA:
-                lambda_noobj = lambda_noobj.cuda()
                 logit = logit.cuda()
             loss_conf = lambda_noobj * mse_loss(logit[index][5], torch.FloatTensor(1))
             #loss_cls = (1 / batch_size) * ce_loss(logit[index][7], target_cls)
