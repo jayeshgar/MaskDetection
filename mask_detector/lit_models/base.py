@@ -60,7 +60,7 @@ class BaseLitModel(pl.LightningModule):
         logits = self(x)
         loss = yolo_loss(logits, y,self.args["cuda"])
         self.log("train_loss", loss)
-        logits,y = getTensors(logits,y)
+        logits,y = getTensors(logits,y,self.args["cuda"])
         self.train_acc(logits, y)
         self.log("train_acc", self.train_acc, on_step=False, on_epoch=True)
         loss = Variable(loss, requires_grad = True)
@@ -71,13 +71,13 @@ class BaseLitModel(pl.LightningModule):
         logits = self(x)
         loss = yolo_loss(logits, y,self.args["cuda"])
         self.log("val_loss", loss, prog_bar=True)
-        logits,y = getTensors(logits,y)
+        logits,y = getTensors(logits,y,self.args["cuda"])
         self.val_acc(logits, y)
         self.log("val_acc", self.val_acc, on_step=False, on_epoch=True, prog_bar=True)
 
     def test_step(self, batch, batch_idx):  # pylint: disable=unused-argument
         x, y = batch
         logits = self(x)
-        logits,y = getTensors(logits,y)
+        logits,y = getTensors(logits,y,self.args["cuda"])
         self.test_acc(logits, y)
         self.log("test_acc", self.test_acc, on_step=False, on_epoch=True)

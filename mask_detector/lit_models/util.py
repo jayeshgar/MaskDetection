@@ -107,7 +107,7 @@ def yolo_loss(logits,y, CUDA = True):
             total_loss = total_loss + loss
     return total_loss
 
-def getTensors(logits,targets):
+def getTensors(logits,targets, CUDA = True):
     num_classes = 3
     confidence = 0.5
     target_out = []
@@ -125,4 +125,9 @@ def getTensors(logits,targets):
         logit_temp = torch.tensor(target_shape) - logit_temp
         target_out.append(torch.tensor(target_shape).unsqueeze(0))
         logit_out.append(logit_temp.unsqueeze(0))
-    return torch.cat(logit_out),torch.cat(target_out)
+    logit_final = torch.cat(logit_out)
+    target_final = torch.cat(target_out)
+    if CUDA:
+        logit_final = logit_final.cuda()
+        target_final = target_final.cuda()
+    return logit_final,target_final
