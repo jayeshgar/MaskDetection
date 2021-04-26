@@ -58,7 +58,7 @@ class BaseLitModel(pl.LightningModule):
     def training_step(self, batch, batch_idx):  # pylint: disable=unused-argument
         x, y = batch
         logits = self(x)
-        loss = yolo_loss(logits, y)
+        loss = yolo_loss(logits, y,self.args["cuda"])
         self.log("train_loss", loss)
         logits,y = getTensors(logits,y)
         self.train_acc(logits, y)
@@ -69,7 +69,7 @@ class BaseLitModel(pl.LightningModule):
     def validation_step(self, batch, batch_idx):  # pylint: disable=unused-argument
         x, y = batch
         logits = self(x)
-        loss = yolo_loss(logits, y)
+        loss = yolo_loss(logits, y,self.args["cuda"])
         self.log("val_loss", loss, prog_bar=True)
         logits,y = getTensors(logits,y)
         self.val_acc(logits, y)

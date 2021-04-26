@@ -50,7 +50,7 @@ def generate_target(image_id, file):
         
         return target
 
-def yolo_loss(logits,y):
+def yolo_loss(logits,y, CUDA = True):
     lambda_coord = 5
     lambda_noobj = 0.5
     mse_loss = nn.MSELoss(reduction='elementwise_mean')
