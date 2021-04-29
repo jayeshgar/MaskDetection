@@ -83,16 +83,15 @@ def main():
         lit_model = lit_model_class(args=args, model=model)
 
     logger = pl.loggers.TensorBoardLogger("training/logs")
-    # Hide lines below until Lab 5
     if args.wandb:
         logger = pl.loggers.WandbLogger()
         logger.watch(model)
         logger.log_hyperparams(vars(args))
-    # Hide lines above until Lab 5
 
     callbacks = [pl.callbacks.EarlyStopping(monitor="val_loss", mode="min", patience=10)]
 
-    args.weights_summary = "full"  # Print full summary of the model
+    args.weights_summary = "top"  # Print full summary of the model
+    
     trainer = pl.Trainer.from_argparse_args(args, num_sanity_val_steps=0,callbacks=callbacks, logger=logger, default_root_dir="training/logs")
  
     trainer.tune(lit_model, datamodule=data)  # If passing --auto_lr_find, this will set learning rate
