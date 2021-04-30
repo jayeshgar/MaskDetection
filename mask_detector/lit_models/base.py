@@ -63,7 +63,7 @@ class BaseLitModel(pl.LightningModule):
         global x_sample
         global y_sample
         if batch_idx == 0:
-            x_sample = x[1].unsqueeze(1)
+            x_sample = x[1]
             y_sample = [y[1]]
         if (batch_idx == 0) or (batch_idx == 1) or (batch_idx == 2):
             logits = self(x_sample)
