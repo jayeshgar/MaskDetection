@@ -8,7 +8,8 @@ OPTIMIZER = "Adam"
 LR = 1e-3
 LOSS = "cross_entropy"
 ONE_CYCLE_TOTAL_STEPS = 100
-
+x_sample = []
+y_sample = []
 
 class BaseLitModel(pl.LightningModule):
     """
@@ -59,6 +60,8 @@ class BaseLitModel(pl.LightningModule):
         x, y = batch
         #For the very first batch, take the first image and store it as reference
         #global variables. This is to know if the weights are indeed changing.
+        global x_sample
+        global y_sample
         if batch_idx == 0:
             x_sample = [x[1]]
             y_sample = [y[1]]
