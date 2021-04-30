@@ -114,8 +114,7 @@ def getTensors(logits,targets, CUDA = True):
     logit_out = []
     for logit,target in zip(logits,targets):
         
-        target_temp = target["labels"]
-        
+        target_temp = target["labels"]        
         target_shape = target["labels"].shape[0]
         #print("target shape = ",target_shape)
         logit_temp = write_results(logit.unsqueeze(1), confidence, num_classes, nms_conf = 0.4)[:,7][0:target_shape]

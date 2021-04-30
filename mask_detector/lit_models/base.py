@@ -57,15 +57,25 @@ class BaseLitModel(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):  # pylint: disable=unused-argument
         x, y = batch
+        #For the very first batch, take the first image and store it as reference
+        #global variables. This is to know if the weights are indeed changing.
+        if batch_idx == 0:
+            x_sample = [x[1]]
+            y_sample = [y[1]]
+        if (batch_idx == 0) or (batch_idx == 1) or (batch_idx == 2):
+            logits = self(x_sample)
+            loss = yolo_loss(logits, y_sample,self.args["cuda"])
+            print("sample loss calculated ", loss)
+
         logits = self(x)
-        print("logits calculated")
+        #print("logits calculated")
         loss = yolo_loss(logits, y,self.args["cuda"])
         self.log("train_loss", loss)
         logits,y = getTensors(logits,y,self.args["cuda"])
         self.train_acc(logits, y)
-        self.log("train_acc", self.train_acc, on_step=False, on_epoch=True)
+        self.log("train_acc", self.train_acc, on_step=True, on_epoch=True)
         loss = Variable(loss, requires_grad = True)
-        print("loss calculated")
+        #print("loss calculated")
         return loss
 
     def validation_step(self, batch, batch_idx):  # pylint: disable=unused-argument
