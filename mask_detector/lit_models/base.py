@@ -58,6 +58,7 @@ class BaseLitModel(pl.LightningModule):
     def training_step(self, batch, batch_idx):  # pylint: disable=unused-argument
         x, y = batch
         logits = self(x)
+        self.log("logits calculated")
         loss = yolo_loss(logits, y,self.args["cuda"])
         self.log("train_loss", loss)
         logits,y = getTensors(logits,y,self.args["cuda"])
