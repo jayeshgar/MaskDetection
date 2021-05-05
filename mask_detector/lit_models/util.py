@@ -53,7 +53,7 @@ def generate_target(image_id, file):
 def yolo_loss(logits,y, CUDA = True):
     lambda_coord = 5
     lambda_noobj = 0.5
-    mse_loss = nn.MSELoss(reduction='elementwise_mean')
+    mse_loss = nn.MSELoss(reduction='mean')
     ce_loss = nn.CrossEntropyLoss() 
     total_loss = 0
     batch_size = logits.size(0)
@@ -77,34 +77,33 @@ def yolo_loss(logits,y, CUDA = True):
         boxes = target["boxes"]
         boxes = torch.squeeze(boxes,dim=1)
         #Rescaling the image as the logits are working in a different dimension
-        im_dim_list = torch.FloatTensor(target["img_size"]).repeat(1,2)
-        #print("im_dim_list = ",im_dim_list)
-        scaling_factor = torch.min(416/im_dim_list,1)[0]
-        #print("boxes = ",boxes)
-        #print("scaling_factor = ",scaling_factor)
-        #print("im_dim_list[0] = ",im_dim_list[0])
-        if CUDA:
-            boxes = boxes.cuda()
-            scaling_factor = scaling_factor.cuda()
-            im_dim_list = im_dim_list.cuda()
-        boxes[:,[0,2]] += (416 - scaling_factor*im_dim_list[0][0])/2
-        boxes[:,[1,3]] += (416 - scaling_factor*im_dim_list[0][1])/2
-        boxes[:,0:4] *= scaling_factor
+        img_w, img_h = target["img_size"][1], target["img_size"][0]
+        w = 416
+        h = 416
+        new_w = int(img_w * min(w/img_w, h/img_h))
+        new_h = int(img_h * min(w/img_w, h/img_h))
+        boxes[:,0] = (w-new_w)//2 + box[:,0]*min(w/img_w, h/img_h)
+        box[:,2] = (w-new_w)//2 + box[:,2]*min(w/img_w, h/img_h)
+        box[:,1] = (h-new_h)//2 + box[:,1]*min(w/img_w, h/img_h)
+        box[:,3] = (h-new_h)//2 + box[:,3]*min(w/img_w, h/img_h)
         for index,box in enumerate(boxes):
             target_cls = target["labels"][index]
             loss_x = lambda_coord * mse_loss(logit[index][1],box[0])
             loss_y = lambda_coord * mse_loss(logit[index][2],box[1])
-            loss_w = lambda_coord * mse_loss(logit[index][3],box[2])
-            loss_h = lambda_coord * mse_loss(logit[index][4],box[3])
+            loss_w = lambda_coord * mse_loss(logit[index][3] - logit[index][1],box[2]-box[0])
+            loss_h = lambda_coord * mse_loss(logit[index][4] - logit[index][2],box[3]-box[1])
             expected_conf = torch.FloatTensor(1)
             if CUDA:
                 logit = logit.cuda()
                 expected_conf = expected_conf.cuda()
-            loss_conf = lambda_noobj * mse_loss(logit[index][5], expected_conf)
-            #loss_cls = (1 / batch_size) * ce_loss(logit[index][7], target_cls)
-            loss_cls = 0
+            loss_conf =  mse_loss(logit[index][5], expected_conf)
+            #loss_conf = loss_conf + lambda_noobj * mse_loss(logit[index][5], expected_conf)
+            loss_cls = (1 / batch_size) * ce_loss(logit[index][7], target_cls)
             loss = loss_x + loss_y + loss_w + loss_h + loss_conf + loss_cls
             total_loss = total_loss + loss
+        #One more to account for the number of boxes generated and what was actually targetted
+        loss_noobj = lambda_noobj * mse_loss(logit[index].shape[0], boxes.shape[0])
+        total_loss += loss_noobj
     return total_loss
 
 def getTensors(logits,targets, CUDA = True):
