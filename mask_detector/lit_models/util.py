@@ -82,10 +82,10 @@ def yolo_loss(logits,y, CUDA = True):
         h = 416
         new_w = int(img_w * min(w/img_w, h/img_h))
         new_h = int(img_h * min(w/img_w, h/img_h))
-        boxes[:,0] = (w-new_w)//2 + box[:,0]*min(w/img_w, h/img_h)
-        box[:,2] = (w-new_w)//2 + box[:,2]*min(w/img_w, h/img_h)
-        box[:,1] = (h-new_h)//2 + box[:,1]*min(w/img_w, h/img_h)
-        box[:,3] = (h-new_h)//2 + box[:,3]*min(w/img_w, h/img_h)
+        boxes[:,0] = (w-new_w)//2 + boxes[:,0]*min(w/img_w, h/img_h)
+        boxes[:,2] = (w-new_w)//2 + boxes[:,2]*min(w/img_w, h/img_h)
+        boxes[:,1] = (h-new_h)//2 + boxes[:,1]*min(w/img_w, h/img_h)
+        boxes[:,3] = (h-new_h)//2 + boxes[:,3]*min(w/img_w, h/img_h)
         for index,box in enumerate(boxes):
             target_cls = target["labels"][index]
             loss_x = lambda_coord * mse_loss(logit[index][1],box[0])
