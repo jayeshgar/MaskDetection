@@ -106,7 +106,7 @@ def yolo_loss(logits,y, CUDA = True):
             #loss_conf = loss_conf + lambda_noobj * mse_loss(logit[index][5], expected_conf)            
             #print("input_logit = ",input_logit,",logit[index][7].long() = ",logit[index][7].long())
             input_logit[0][logit[index][7].long()] = 1
-            print("batch_size = ",batch_size,",input_logit = ",input_logit,"target_cls = ",target_cls)
+            #print("batch_size = ",batch_size,",input_logit = ",input_logit,"target_cls = ",target_cls)
             loss_cls = (1 / batch_size) * ce_loss(input_logit, target_cls.unsqueeze(0))
             loss = loss_x + loss_y + loss_w + loss_h + loss_conf + loss_cls
             total_loss = total_loss + loss
