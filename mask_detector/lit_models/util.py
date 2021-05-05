@@ -99,7 +99,7 @@ def yolo_loss(logits,y, CUDA = True):
             loss_conf =  mse_loss(logit[index][5], expected_conf)
             #loss_conf = loss_conf + lambda_noobj * mse_loss(logit[index][5], expected_conf)
             print("batch_size = ",batch_size,",logit[index][7] = ",logit[index][7],"target_cls = ",target_cls)
-            loss_cls = (1 / batch_size) * ce_loss(logit[index][7].unsqueeze(0), target_cls)
+            loss_cls = (1 / batch_size) * ce_loss(logit[index][7].squeeze(0), target_cls)
             loss = loss_x + loss_y + loss_w + loss_h + loss_conf + loss_cls
             total_loss = total_loss + loss
         #One more to account for the number of boxes generated and what was actually targetted
