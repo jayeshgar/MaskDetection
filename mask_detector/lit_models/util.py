@@ -107,7 +107,7 @@ def yolo_loss(logits,y, CUDA = True):
             loss = loss_x + loss_y + loss_w + loss_h + loss_conf + loss_cls
             total_loss = total_loss + loss
         #One more to account for the number of boxes generated and what was actually targetted
-        loss_noobj = lambda_noobj * mse_loss(logit.shape[0], boxes.shape[0])
+        loss_noobj = lambda_noobj * mse_loss(torch.tensor([logit.shape[0]]), torch.tensor([boxes.shape[0]]))
         total_loss += loss_noobj
     return total_loss
 
