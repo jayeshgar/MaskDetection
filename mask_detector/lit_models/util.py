@@ -94,8 +94,8 @@ def yolo_loss(logits,y, CUDA = True):
             loss_h = lambda_coord * mse_loss(logit[index][4] - logit[index][2],box[3]-box[1])
             expected_conf = torch.FloatTensor(1)
             input_logit = torch.zeros(1,3)
-            input_objects = torch.tensor([logit.shape[0]])
-            target_objects = torch.tensor([boxes.shape[0]])
+            input_objects = torch.FloatTensor([logit.shape[0]])
+            target_objects = torch.FloatTensor([boxes.shape[0]])
             if CUDA:
                 logit = logit.cuda()
                 expected_conf = expected_conf.cuda()
