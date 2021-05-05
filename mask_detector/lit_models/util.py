@@ -101,7 +101,7 @@ def yolo_loss(logits,y, CUDA = True):
             input_logit = torch.zeros(1,3)
             input_logit[logit[index][7].long()] = 1
             print("batch_size = ",batch_size,",input_logit = ",input_logit,"target_cls = ",target_cls)
-            loss_cls = (1 / batch_size) * ce_loss(input_logit, target_cls)
+            loss_cls = (1 / batch_size) * ce_loss(input_logit, target_cls.unsqueeze(0))
             loss = loss_x + loss_y + loss_w + loss_h + loss_conf + loss_cls
             total_loss = total_loss + loss
         #One more to account for the number of boxes generated and what was actually targetted
