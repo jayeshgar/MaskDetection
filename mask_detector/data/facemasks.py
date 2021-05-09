@@ -48,7 +48,17 @@ class MaskDataset(object):
         #    img = self.transforms(img) 
         #Return only the image id. Fetching  the exact label
         # And calculating the loss with be taken care later 
-        # At loss calculation level               
+        # At loss calculation level
+        #Rescaling the image as the logits are working in a different dimension
+        boxes = target["boxes"]
+        img_w, img_h = img_orig_dim[1], img_orig_dim[0]
+        new_w = int(img_w * min(target_img_size/img_w, target_img_size/img_h))
+        new_h = int(img_h * min(target_img_size/img_w, target_img_size/img_h))
+        boxes[:,[0,2]] = (target_img_size-new_w)//2 + boxes[:,[0,2]]*min(target_img_size/img_w, target_img_size/img_h)
+        #boxes[:,2] = (target_img_size-new_w)//2 + boxes[:,2]*min(target_img_size/img_w, target_img_size/img_h)
+        boxes[:,[1,3]] = (target_img_size-new_h)//2 + boxes[:,[1,3]]*min(target_img_size/img_w, target_img_size/img_h)
+        #boxes[:,3] = (target_img_size-new_h)//2 + boxes[:,3]*min(target_img_size/img_w, target_img_size/img_h)               
+        target["target_boxes"] = boxes
         return img, target
 
     def __len__(self):

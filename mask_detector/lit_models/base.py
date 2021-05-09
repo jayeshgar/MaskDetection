@@ -1,7 +1,7 @@
 import argparse
 import pytorch_lightning as pl
 import torch
-from .util import yolo_loss,getTensors
+from .util import yolo_loss
 from torch.autograd import Variable
 
 OPTIMIZER = "Adam"
@@ -27,8 +27,10 @@ class BaseLitModel(pl.LightningModule):
         self.lr = self.args.get("lr", LR)
 
         loss = self.args.get("loss", LOSS)
-        if not loss in ("ctc", "transformer"):
+        if not loss in ("ctc", "transformer","yolo_loss"):
             self.loss_fn = getattr(torch.nn.functional, loss)
+        elif loss == "yolo_loss":
+            self.loss_fn = yolo_loss
 
         self.one_cycle_max_lr = self.args.get("one_cycle_max_lr", None)
         self.one_cycle_total_steps = self.args.get("one_cycle_total_steps", ONE_CYCLE_TOTAL_STEPS)
@@ -60,39 +62,30 @@ class BaseLitModel(pl.LightningModule):
         x, y = batch
         #For the very first batch, take the first image and store it as reference
         #global variables. This is to know if the weights are indeed changing.
-        global x_sample
-        global y_sample
-        if batch_idx == 0:
-            x_sample = x[1].unsqueeze(0)
-            y_sample = [y[1]]
-        if (batch_idx == 0) or (batch_idx == 1) or (batch_idx == 2):
-            logits = self(x_sample)
-            loss = yolo_loss(logits, y_sample,self.args["cuda"])
-            print("sample loss calculated ", loss)
-
         logits = self(x)
-        #print("logits calculated")
-        loss = yolo_loss(logits, y,self.args["cuda"])
+        loss,results,targets = self.loss_fn(logits, y,self.args["cuda"])
         self.log("train_loss", loss)
-        logits,y = getTensors(logits,y,self.args["cuda"])
-        self.train_acc(logits, y)
+        sm = torch.nn.Softmax(dim=1)
+        self.train_acc(sm(results[:,5:]), targets[:,4].long())
         self.log("train_acc", self.train_acc, on_step=True, on_epoch=True)
         loss = Variable(loss, requires_grad = True)
-        #print("loss calculated")
         return loss
 
     def validation_step(self, batch, batch_idx):  # pylint: disable=unused-argument
         x, y = batch
         logits = self(x)
-        loss = yolo_loss(logits, y,self.args["cuda"])
+        loss,results,targets = self.loss_fn(logits, y,self.args["cuda"])
         self.log("val_loss", loss, prog_bar=True)
-        logits,y = getTensors(logits,y,self.args["cuda"])
-        self.val_acc(logits, y)
+        sm = torch.nn.Softmax(dim=1)
+        #logits,y = getTensors(logits,y,self.args["cuda"])
+        self.val_acc(sm(results[:,5:]), targets[:,4].long())
         self.log("val_acc", self.val_acc, on_step=False, on_epoch=True, prog_bar=True)
 
     def test_step(self, batch, batch_idx):  # pylint: disable=unused-argument
         x, y = batch
         logits = self(x)
-        logits,y = getTensors(logits,y,self.args["cuda"])
-        self.test_acc(logits, y)
+        loss,results,targets = self.loss_fn(logits, y,self.args["cuda"])
+        #logits,y = getTensors(logits,y,self.args["cuda"])
+        sm = torch.nn.Softmax(dim=1)
+        self.test_acc(sm(results[:,5:]), targets[:,4].long())
         self.log("test_acc", self.test_acc, on_step=False, on_epoch=True)
