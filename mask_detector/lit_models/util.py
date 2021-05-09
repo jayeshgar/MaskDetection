@@ -58,10 +58,12 @@ def yolo_loss(logits,y, CUDA = True):
     total_loss = 0
     batch_size = logits.size(0)
     num_classes = 3
-    confidence = 0.5    
+    confidence = 0.5
+    results = [target["boxes"] for target in y]    
     if CUDA:
         logits = logits.cuda()
-    logits = train_iou(logits, confidence, [target["boxes"] for target in y])
+        results = [target["boxes"].cuda() for target in y]
+    logits = train_iou(logits, confidence, results)
     targets = torch.cat([torch.cat([target["boxes"],target["labels"].view((-1,1))],1) for target in y])
     loss_x = lambda_coord * mse_loss(logits[:,0],targets[:,0])
     loss_y = lambda_coord * mse_loss(logits[:,1],targets[:,1])
