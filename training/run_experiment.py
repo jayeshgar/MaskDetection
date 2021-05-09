@@ -40,6 +40,7 @@ def _setup_parser():
     parser.add_argument("--data_class", type=str, default="MNIST")
     parser.add_argument("--model_class", type=str, default="MLP")
     parser.add_argument("--load_checkpoint", type=str, default=None)
+    parser.add_argument("--checkpoint_dir", type=str, default=None)
 
     # Get the data and model classes, so that we can add their specific arguments
     temp_args, _ = parser.parse_known_args()
@@ -88,7 +89,9 @@ def main():
         logger.watch(model)
         logger.log_hyperparams(vars(args))
 
-    callbacks = [pl.callbacks.EarlyStopping(monitor="val_loss", mode="min", patience=10)]
+    #Callback for checkpoint
+    ckpt = pl.callbacks.ModelCheckpoint(dirpath=args.checkpoint_dir, filename='{epoch}')
+    callbacks = [pl.callbacks.EarlyStopping(monitor="val_loss", mode="min", patience=10),ckpt]
 
     args.weights_summary = "top"  # Print full summary of the model
     
