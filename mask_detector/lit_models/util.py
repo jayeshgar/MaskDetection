@@ -4,7 +4,8 @@ from bs4 import BeautifulSoup
 import os
 import torch.nn as nn
 from mask_detector.models.util import *
-
+from pytorch_lightning.callbacks import Callback
+from mask_detector.data.util import prep_image
 def generate_box(obj):
     
     xmin = int(obj.find('xmin').text)
@@ -76,3 +77,48 @@ def yolo_loss(logits,y, CUDA = True):
     loss = loss_x + loss_y + loss_w + loss_h + loss_conf + loss_cls
     total_loss = total_loss + loss
     return total_loss,logits,targets
+
+
+class SanityCheckCallback(Callback):
+    
+    images_dir = "mask_detector/data/sample_images/"
+    imgs = list(sorted(os.listdir(images_dir)))
+    labels_dir = "mask_detector/data/sample_annotations/"
+    labels = list(sorted(os.listdir(labels_dir)))
+    def print_samples(self):
+        for image,annotation in zip(imgs,labels):
+            img = Image.open(images_dir+image).convert("RGB")
+            target = generate_target(labels_dir+annotation)
+            plot_image(img, target)
+
+    def sanity_test(self,trainer,pl_module):
+        for image,annotation in zip(imgs,labels):
+            img = Image.open(images_dir+image).convert("RGB")
+            target = generate_target(labels_dir+annotation)
+            #prepare the image for model input
+            target_img_size = 416  #Target image size as per yolo
+            image = prep_image(img, target_img_size).squeeze()
+            #Fetch the model output
+            logit = pl_module.forward(image)
+            #Format the boxes of the target
+            img_orig_dim = [img.shape[0],img.shape[1]]
+            img_w, img_h = img_orig_dim[1], img_orig_dim[0]
+            new_w = int(img_w * min(target_img_size/img_w, target_img_size/img_h))
+            new_h = int(img_h * min(target_img_size/img_w, target_img_size/img_h))
+            boxes[:,[0,2]] = (boxes[:,[0,2]] - (target_img_size-new_w)//2) /min(target_img_size/img_w, target_img_size/img_h)
+            boxes[:,[1,3]] = (boxes[:,[1,3]] - (target_img_size-new_h)//2) /min(target_img_size/img_w, target_img_size/img_h)
+            target["boxes"] = boxes
+            plot_image(img, target)
+
+    def on_fit_start(self,, trainer, pl_module):
+        print('Plot the original when the training starts')
+        print_samples()
+
+    def on_train_start(self, trainer, pl_module):
+        print('Run the sanity check when the training starts')
+        sanity_test(trainer, pl_module)
+        
+
+    def on_train_end(self, trainer, pl_module):
+        print('Run the sanity check when training ends')
+        sanity_test(trainer, pl_module)
