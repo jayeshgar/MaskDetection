@@ -6,6 +6,10 @@ import torch.nn as nn
 from mask_detector.models.util import *
 from pytorch_lightning.callbacks import Callback
 from mask_detector.data.util import prep_image
+from PIL import Image
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+
 def generate_box(obj):
     
     xmin = int(obj.find('xmin').text)
@@ -85,40 +89,72 @@ class SanityCheckCallback(Callback):
     imgs = list(sorted(os.listdir(images_dir)))
     labels_dir = "mask_detector/data/sample_annotations/"
     labels = list(sorted(os.listdir(labels_dir)))
+
     def print_samples(self):
-        for image,annotation in zip(imgs,labels):
-            img = Image.open(images_dir+image).convert("RGB")
-            target = generate_target(labels_dir+annotation)
-            plot_image(img, target)
+        for image,annotation in zip(self.imgs,self.labels):
+            img = Image.open(self.images_dir+image).convert("RGB")
+            target = generate_target(0,self.labels_dir+annotation)
+            self.plot_image(img, target)
 
     def sanity_test(self,trainer,pl_module):
-        for image,annotation in zip(imgs,labels):
-            img = Image.open(images_dir+image).convert("RGB")
-            target = generate_target(labels_dir+annotation)
+        num_classes = 3
+        confidence = 0.5
+        for image,annotation in zip(self.imgs,self.labels):
+            img = Image.open(self.images_dir+image).convert("RGB")
+            img = np.array(img) #Convert into numpy  array
+            target = generate_target(0,self.labels_dir+annotation)
             #prepare the image for model input
             target_img_size = 416  #Target image size as per yolo
             image = prep_image(img, target_img_size).squeeze()
             #Fetch the model output
-            logit = pl_module.forward(image)
+            logit = pl_module.forward(image.unsqueeze(0))
+            logit = write_results(logit, confidence, num_classes, nms_conf = 0.4)
+            #print("logit shape = ",logit.shape)
+            boxes = logit[:,:4]
+            #print("boxes shape = ", boxes.shape)
+            labels = torch.argmax(logit[:,5:],dim=1)
+            #print("labels shape = ", labels.shape)
             #Format the boxes of the target
             img_orig_dim = [img.shape[0],img.shape[1]]
             img_w, img_h = img_orig_dim[1], img_orig_dim[0]
             new_w = int(img_w * min(target_img_size/img_w, target_img_size/img_h))
             new_h = int(img_h * min(target_img_size/img_w, target_img_size/img_h))
+            #Remove the unnecessary boxes 
             boxes[:,[0,2]] = (boxes[:,[0,2]] - (target_img_size-new_w)//2) /min(target_img_size/img_w, target_img_size/img_h)
             boxes[:,[1,3]] = (boxes[:,[1,3]] - (target_img_size-new_h)//2) /min(target_img_size/img_w, target_img_size/img_h)
             target["boxes"] = boxes
-            plot_image(img, target)
+            target["labels"] = labels
+            self.plot_image(img, target)
 
-    def on_fit_start(self,, trainer, pl_module):
+    def plot_image(self,img, annotation):
+        fig,ax = plt.subplots(1)
+        ax.imshow(img)
+        labels = annotation["labels"]
+        for index,box in enumerate(annotation["boxes"]):        
+            xmin, ymin, xmax, ymax = box
+            # Create a Rectangle patch
+            if labels[index] == 0:
+                color = 'r'
+            if labels[index] == 1:
+                color = 'g'
+            if labels[index] == 2:
+                color = 'y'
+            rect = patches.Rectangle((xmin,ymin),(xmax-xmin),(ymax-ymin),linewidth=1,edgecolor=color,facecolor='none')
+
+            # Add the patch to the Axes
+            ax.add_patch(rect)
+
+        plt.show()
+
+    def on_fit_start(self, trainer, pl_module):
         print('Plot the original when the training starts')
-        print_samples()
+        #self.print_samples()
 
     def on_train_start(self, trainer, pl_module):
         print('Run the sanity check when the training starts')
-        sanity_test(trainer, pl_module)
+        self.sanity_test(trainer, pl_module)
         
 
     def on_train_end(self, trainer, pl_module):
         print('Run the sanity check when training ends')
-        sanity_test(trainer, pl_module)
+        self.sanity_test(trainer, pl_module)

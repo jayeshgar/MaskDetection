@@ -91,7 +91,7 @@ def main():
 
     #Callback for checkpoint
     ckpt = pl.callbacks.ModelCheckpoint(dirpath=args.checkpoint_dir, filename='{epoch}')
-    sanitycbk = lit_models.utils.SanityCheckCallback()
+    sanitycbk = lit_models.util.SanityCheckCallback()
     callbacks = [pl.callbacks.EarlyStopping(monitor="val_loss", mode="min", patience=10),ckpt,sanitycbk]
 
     args.weights_summary = "top"  # Print full summary of the model
