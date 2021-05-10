@@ -148,7 +148,7 @@ class SanityCheckCallback(Callback):
 
     def on_fit_start(self, trainer, pl_module):
         print('Plot the original when the training starts')
-        #self.print_samples()
+        self.print_samples()
 
     def on_train_start(self, trainer, pl_module):
         print('Run the sanity check when the training starts')
