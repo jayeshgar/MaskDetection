@@ -107,6 +107,8 @@ class SanityCheckCallback(Callback):
             target_img_size = 416  #Target image size as per yolo
             image = prep_image(img, target_img_size).squeeze()
             #Fetch the model output
+            if torch.cuda.is_available():
+                image = image.cuda()
             logit = pl_module.forward(image.unsqueeze(0))
             logit = write_results(logit, confidence, num_classes, nms_conf = 0.4)
             #print("logit shape = ",logit.shape)
