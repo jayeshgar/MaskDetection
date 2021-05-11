@@ -192,7 +192,6 @@ def write_results(prediction, confidence, num_classes, nms_conf = 0.4):
 def train_iou(prediction, confidence,actual_boxes = None):
     conf_mask = (prediction[:,:,4] > confidence).float().unsqueeze(2)
     prediction = prediction*conf_mask
-    
     #Transform the center and width/height coordinates to log left and bottom right coordinates
     box_corner = prediction.new(prediction.shape)
     box_corner[:,:,0] = (prediction[:,:,0] - prediction[:,:,2]/2)
@@ -205,13 +204,13 @@ def train_iou(prediction, confidence,actual_boxes = None):
     write = False  #Helps in concatenating the output
     for ind in range(batch_size):        
         boxes = actual_boxes[ind]
-        for box in boxes:
-            image_pred = prediction[ind]          #image Tensor
+        for index,box in enumerate(boxes):
+            image_pred = torch.clone(prediction[ind])          #image Tensor
             #perform NMS            
             #Get the IOUs of all boxes that come after the one we are looking at 
             #in the loop
             ious = bbox_iou(box.unsqueeze(0), image_pred)
-            #Zero out all the detections that have IoU > treshhold
+            #Zero out all the detections that have IoU != max
             iou_mask = (ious == max(ious)).float().unsqueeze(1)
             image_pred *= iou_mask       
             
