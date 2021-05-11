@@ -9,7 +9,7 @@ from mask_detector.data.util import prep_image
 from PIL import Image
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from google.colab.patches import cv2_imshow # for image display
+#from google.colab.patches import cv2_imshow # for image display
 
 def generate_box(obj):
     
@@ -131,8 +131,8 @@ class SanityCheckCallback(Callback):
 
     def plot_image(self,img, annotation):
         fig,ax = plt.subplots(1)
-        #ax.imshow(img)
-        cv2_imshow(img)
+        ax.imshow(img)
+        #cv2_imshow(img)
         labels = annotation["labels"]
         for index,box in enumerate(annotation["boxes"]):        
             xmin, ymin, xmax, ymax = box
