@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 #import cv2
 from google.colab.patches import cv2_imshow
+from skimage import io
 #from google.colab.patches import cv2_imshow # for image display
 
 def generate_box(obj):
@@ -151,7 +152,8 @@ class SanityCheckCallback(Callback):
         num_classes = 3
         confidence = 0.5
         for image,annotation in zip(self.imgs,self.labels):
-            img = Image.open(self.images_dir+image).convert("RGB")
+            #img = Image.open(self.images_dir+image).convert("RGB")
+            img = io.imread(self.images_dir+image)
             cv2_imshow(img)
             img = np.array(img) #Convert into numpy  array
             target = generate_target(0,self.labels_dir+annotation)
