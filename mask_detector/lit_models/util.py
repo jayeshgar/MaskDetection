@@ -71,7 +71,7 @@ def yolo_loss(logits,y, CUDA = True):
     finals = torch.zeros(logits.shape)
     if CUDA:
         logits = logits.cuda()
-        #targets = targets.cuda()
+        targets = [target.cuda() for target in targets]
     
     #Transform the center and width/height coordinates to log left and bottom right coordinates
     box_corner = logits.new(logits.shape)
