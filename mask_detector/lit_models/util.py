@@ -9,7 +9,7 @@ from mask_detector.data.util import prep_image
 from PIL import Image
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-#import cv2
+import cv2 as cv
 from google.colab.patches import cv2_imshow
 from skimage import io
 #from google.colab.patches import cv2_imshow # for image display
@@ -152,8 +152,9 @@ class SanityCheckCallback(Callback):
         num_classes = 3
         confidence = 0.5
         for image,annotation in zip(self.imgs,self.labels):
-            #img = Image.open(self.images_dir+image).convert("RGB")
-            img = io.imread(self.images_dir+image).convert("RGB")
+            #img = Image.open(self.images_dir+image).convert("RGB")            
+            img = io.imread(self.images_dir+image)
+            img = cv.cvtColor(img, cv.COLOR_BGRA2RGB)
             cv2_imshow(img)
             img = np.array(img) #Convert into numpy  array
             target = generate_target(0,self.labels_dir+annotation)
