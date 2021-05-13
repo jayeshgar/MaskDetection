@@ -153,7 +153,7 @@ class SanityCheckCallback(Callback):
         confidence = 0.5
         for image,annotation in zip(self.imgs,self.labels):
             #img = Image.open(self.images_dir+image).convert("RGB")
-            img = io.imread(self.images_dir+image)
+            img = io.imread(self.images_dir+image).convert("RGB")
             cv2_imshow(img)
             img = np.array(img) #Convert into numpy  array
             target = generate_target(0,self.labels_dir+annotation)
