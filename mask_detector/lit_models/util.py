@@ -9,6 +9,8 @@ from mask_detector.data.util import prep_image
 from PIL import Image
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+#import cv2
+from google.colab.patches import cv2_imshow
 #from google.colab.patches import cv2_imshow # for image display
 
 def generate_box(obj):
@@ -155,9 +157,11 @@ class SanityCheckCallback(Callback):
             #prepare the image for model input
             target_img_size = 416  #Target image size as per yolo
             img = prep_image(img, target_img_size).squeeze()
+            img = img.permute(1, 2, 0)
             fig,ax = plt.subplots(1)
-            ax.imshow(img.permute(1, 2, 0))
-            plt.show()
+            #ax.imshow(img.permute(1, 2, 0))
+            #plt.show()
+            cv2_imshow("",img.cpu().detach().numpy())
             #Fetch the model output
             #if torch.cuda.is_available():
             #    image = image.cuda()
