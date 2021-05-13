@@ -108,19 +108,27 @@ def yolo_loss(logits,y, CUDA = True):
             box_3 = torch.repeat_interleave(box[3],repeats=predictions.size(0))
             box_4 = torch.repeat_interleave(box[4],repeats=predictions.size(0))            
             loss_x = lambda_coord * mse_loss(predictions[:,0],box_0)
+            print("loss_x = ", loss_x)
             loss_y = lambda_coord * mse_loss(predictions[:,1],box_1)
+            print("loss_y = ", loss_y)
             loss_w = lambda_coord * mse_loss(predictions[:,2] - predictions[:,0],box_2-box_0)
+            print("loss_w = ", loss_w)
             loss_h = lambda_coord * mse_loss(predictions[:,3] - predictions[:,1],box_3-box_1)
+            print("loss_h = ", loss_h)
             expected_conf = torch.ones(predictions.size(0)) 
             expected_noconf = torch.zeros(logits[ind].size(0) - predictions.size(0))
             if CUDA:
                 expected_conf = expected_conf.cuda()
                 expected_noconf = expected_noconf.cuda()
-            loss_conf =  mse_loss(predictions[:,4], expected_conf)            
+            loss_conf =  mse_loss(predictions[:,4], expected_conf)  
+            print("loss_conf = ", loss_conf)          
             loss_noconf =  lambda_noobj*mse_loss(no_predictions[:,4], expected_noconf)
+            print("loss_noconf = ", loss_noconf)
             loss_cls = (1 / batch_size) * ce_loss(predictions[:,5:], box_4.long())
+            print("loss_cls = ", loss_cls)
             loss = loss_x + loss_y + loss_w + loss_h + loss_conf + loss_noconf + loss_cls            
         total_loss = total_loss + loss
+        
     return total_loss,logits,finals
 
 
@@ -146,30 +154,33 @@ class SanityCheckCallback(Callback):
             target = generate_target(0,self.labels_dir+annotation)
             #prepare the image for model input
             target_img_size = 416  #Target image size as per yolo
-            image = prep_image(img, target_img_size).squeeze()
+            img = prep_image(img, target_img_size).squeeze()
+            fig,ax = plt.subplots(1)
+            ax.imshow(img.permute(1, 2, 0))
+            plt.show()
             #Fetch the model output
-            if torch.cuda.is_available():
-                image = image.cuda()
-            logit = pl_module.forward(image.unsqueeze(0))
-            logit = write_results(logit, confidence, num_classes, nms_conf = 0.4)
+            #if torch.cuda.is_available():
+            #    image = image.cuda()
+            #logit = pl_module.forward(image.unsqueeze(0))
+            #logit = write_results(logit, confidence, num_classes, nms_conf = 0.4)
             #print("logit shape = ",logit.shape)
-            boxes = logit[:,:4]
+            #boxes = logit[:,:4]
             #print("boxes shape = ", boxes.shape)
-            labels = torch.argmax(logit[:,5:],dim=1)
+            #labels = torch.argmax(logit[:,5:],dim=1)
             #print("labels shape = ", labels.shape)
             #Format the boxes of the target
-            img_orig_dim = [img.shape[0],img.shape[1]]
-            img_w, img_h = img_orig_dim[1], img_orig_dim[0]
-            new_w = int(img_w * min(target_img_size/img_w, target_img_size/img_h))
-            new_h = int(img_h * min(target_img_size/img_w, target_img_size/img_h))
+            #img_orig_dim = [img.shape[0],img.shape[1]]
+            #img_w, img_h = img_orig_dim[1], img_orig_dim[0]
+            #new_w = int(img_w * min(target_img_size/img_w, target_img_size/img_h))
+            #new_h = int(img_h * min(target_img_size/img_w, target_img_size/img_h))
             #Remove the unnecessary boxes 
-            boxes[:,[0,2]] = (boxes[:,[0,2]] - (target_img_size-new_w)//2) /min(target_img_size/img_w, target_img_size/img_h)
-            boxes[:,[1,3]] = (boxes[:,[1,3]] - (target_img_size-new_h)//2) /min(target_img_size/img_w, target_img_size/img_h)
-            target["boxes"] = boxes
-            target["labels"] = labels
-            self.plot_image(img, target)
+            #boxes[:,[0,2]] = (boxes[:,[0,2]] - (target_img_size-new_w)//2) /min(target_img_size/img_w, target_img_size/img_h)
+            #boxes[:,[1,3]] = (boxes[:,[1,3]] - (target_img_size-new_h)//2) /min(target_img_size/img_w, target_img_size/img_h)
+            #target["boxes"] = boxes
+            #target["labels"] = labels
+            #self.plot_image(img, target)
 
-    def plot_image(self,img, annotation):
+    def plot_image(self,imgs, annotations):
         fig,ax = plt.subplots(1)
         ax.imshow(img)
         #cv2_imshow(img)
@@ -189,11 +200,7 @@ class SanityCheckCallback(Callback):
             ax.add_patch(rect)
 
         plt.show()
-
-    def on_fit_start(self, trainer, pl_module):
-        print('Plot the original when the training starts')
-        self.print_samples()
-
+    
     def on_train_start(self, trainer, pl_module):
         print('Run the sanity check when the training starts')
         self.sanity_test(trainer, pl_module)

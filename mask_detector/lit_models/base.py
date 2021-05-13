@@ -69,7 +69,8 @@ class BaseLitModel(pl.LightningModule):
         self.train_acc(sm(results[:,5:]), targets[:,4].long())
         self.log("train_acc", self.train_acc, on_step=True, on_epoch=True)
         loss = Variable(loss, requires_grad = True)
-        return loss
+        output = {"loss":loss}
+        return output
 
     def validation_step(self, batch, batch_idx):  # pylint: disable=unused-argument
         x, y = batch
