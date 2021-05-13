@@ -152,6 +152,7 @@ class SanityCheckCallback(Callback):
         confidence = 0.5
         for image,annotation in zip(self.imgs,self.labels):
             img = Image.open(self.images_dir+image).convert("RGB")
+            cv2_imshow(img)
             img = np.array(img) #Convert into numpy  array
             target = generate_target(0,self.labels_dir+annotation)
             #prepare the image for model input
@@ -161,7 +162,7 @@ class SanityCheckCallback(Callback):
             fig,ax = plt.subplots(1)
             #ax.imshow(img.permute(1, 2, 0))
             #plt.show()
-            cv2_imshow(img.cpu().detach().numpy())
+            #cv2_imshow(img.cpu().detach().numpy())
             #Fetch the model output
             #if torch.cuda.is_available():
             #    image = image.cuda()
