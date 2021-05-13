@@ -65,23 +65,59 @@ def yolo_loss(logits,y, CUDA = True):
     batch_size = logits.size(0)
     num_classes = 3
     confidence = 0.5
-    results = [target["boxes"] for target in y]
-    targets = torch.cat([torch.cat([target["boxes"],target["labels"].view((-1,1))],1) for target in y])      
-    expected_conf = torch.ones(targets.size(0))  
+    targets = [torch.cat([target["boxes"],target["labels"].view((-1,1))],1) for target in y]
+    # Final targets will carry the targets specifically for each logit result
+    #So shape should be as that of logits
+    finals = torch.zeros(logits.shape)
     if CUDA:
         logits = logits.cuda()
-        results = [target["boxes"].cuda() for target in y]
-        expected_conf = expected_conf.cuda()
-    logits = train_iou(logits, confidence, results)    
-    loss_x = lambda_coord * mse_loss(logits[:,0],targets[:,0])
-    loss_y = lambda_coord * mse_loss(logits[:,1],targets[:,1])
-    loss_w = lambda_coord * mse_loss(logits[:,2] - logits[:,0],targets[:,2]-targets[:,0])
-    loss_h = lambda_coord * mse_loss(logits[:,3] - logits[:,1],targets[:,3]-targets[:,1])        
-    loss_conf =  mse_loss(logits[:,4], expected_conf)
-    loss_cls = (1 / batch_size) * ce_loss(logits[:,5:], targets[:,4].long())
-    loss = loss_x + loss_y + loss_w + loss_h + loss_conf + loss_cls
-    total_loss = total_loss + loss
-    return total_loss,logits,targets
+        #targets = targets.cuda()
+    
+    #Transform the center and width/height coordinates to log left and bottom right coordinates
+    box_corner = logits.new(logits.shape)
+    box_corner[:,:,0] = (logits[:,:,0] - logits[:,:,2]/2)
+    box_corner[:,:,1] = (logits[:,:,1] - logits[:,:,3]/2)
+    box_corner[:,:,2] = (logits[:,:,0] + logits[:,:,2]/2) 
+    box_corner[:,:,3] = (logits[:,:,1] + logits[:,:,3]/2)
+    logits[:,:,:4] = box_corner[:,:,:4]
+
+    for ind in range(batch_size):        
+        boxes = targets[ind]
+        for index,box in enumerate(boxes):
+            predictions = torch.clone(logits[ind])          #image Tensor
+            #Get the IOUs of all boxes that come after the one we are looking at 
+            #in the loop
+            ious = bbox_iou(box.unsqueeze(0), predictions)
+            #Zero out all the detections that have IoU != 0
+            iou_mask = (ious != 0).float().unsqueeze(1)
+            predictions *= iou_mask       
+            
+            #Remove the non-zero entries
+            non_zero_ind = torch.nonzero(predictions[:,4]).squeeze()
+
+            #Setting the finals to be passed for metrics 
+            finals[ind][non_zero_ind, 4] = 1
+            #Taking from image
+            zero_ind = torch.tensor([not_idx for not_idx in range(predictions.size(0)) if not_idx not in non_zero_ind])
+            no_predictions = predictions[zero_ind]
+            predictions = predictions[non_zero_ind]
+            box_0 = torch.repeat_interleave(box[0],repeats=predictions.size(0))
+            box_1 = torch.repeat_interleave(box[1],repeats=predictions.size(0))
+            box_2 = torch.repeat_interleave(box[2],repeats=predictions.size(0))
+            box_3 = torch.repeat_interleave(box[3],repeats=predictions.size(0))
+            box_4 = torch.repeat_interleave(box[4],repeats=predictions.size(0))            
+            loss_x = lambda_coord * mse_loss(predictions[:,0],box_0)
+            loss_y = lambda_coord * mse_loss(predictions[:,1],box_1)
+            loss_w = lambda_coord * mse_loss(predictions[:,2] - predictions[:,0],box_2-box_0)
+            loss_h = lambda_coord * mse_loss(predictions[:,3] - predictions[:,1],box_3-box_1)
+            expected_conf = torch.ones(predictions.size(0))          
+            loss_conf =  mse_loss(predictions[:,4], expected_conf)
+            expected_noconf = torch.zeros(logits[ind].size(0) - predictions.size(0))
+            loss_noconf =  lambda_noobj*mse_loss(no_predictions[:,4], expected_noconf)
+            loss_cls = (1 / batch_size) * ce_loss(predictions[:,5:], box_4.long())
+            loss = loss_x + loss_y + loss_w + loss_h + loss_conf + loss_noconf + loss_cls            
+        total_loss = total_loss + loss
+    return total_loss,logits,finals
 
 
 class SanityCheckCallback(Callback):
