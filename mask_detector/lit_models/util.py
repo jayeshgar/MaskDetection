@@ -161,7 +161,7 @@ class SanityCheckCallback(Callback):
             fig,ax = plt.subplots(1)
             #ax.imshow(img.permute(1, 2, 0))
             #plt.show()
-            cv2_imshow("",img.cpu().detach().numpy())
+            cv2_imshow(img.cpu().detach().numpy())
             #Fetch the model output
             #if torch.cuda.is_available():
             #    image = image.cuda()
