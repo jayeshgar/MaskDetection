@@ -11,13 +11,13 @@ Dataset is well annotated with 3 classes.
     * Wearing Mask
 
 # Products Used 
-   Pytorch Lightening: Excellent framework for structuring your project. Tried various features like checkpoints, gpu support etc.
-   Pytorch: Python ibrary used to build the model
-   Google Colab: Used to train the model as the GPU is not available locally.
-   Weight & Biases: Used to monitor the training progress.
+   * **Pytorch Lightening:** Excellent framework for structuring your project. Tried various features              like checkpoints, gpu support etc.
+   * **Pytorch:** Python ibrary used to build the model
+   * **Google Colab:** Used to train the model as the GPU is not available locally.
+   * **Weight & Biases:** Used to monitor the training progress.
 
 # Model Used: 
-    Tried with MASK-RCNN using a pretrained model but could use it properly with PyTorch lightening. So tried to train a YOLO v3 model on custom dataset. 
+    Tried with MASK-RCNN using a pretrained model but could use it properly with PyTorch lightening. So tried to train a **YOLO v3 model** on custom dataset. 
 
 # Results:
 
