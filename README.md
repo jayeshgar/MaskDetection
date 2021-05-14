@@ -6,9 +6,9 @@ In these trying times, we need to ensure not only that we are wearing mask but a
 Used kaggle dataset https://www.kaggle.com/andrewmvd/face-mask-detection for  the same. 
 Though the dataset is small(Wanted to annotate some images myself using labelstud.io but couldn't)
 Dataset is well annotated with 3 classes. 
-    - No Mask 
-    - Improperly wearing Mask 
-    - Wearing Mask
+* No Mask 
+* Improperly wearing Mask 
+* Wearing Mask
 
 # Products Used 
    * **Pytorch Lightening:** Excellent framework for structuring your project. Tried various features              like checkpoints, gpu support etc.
