@@ -154,7 +154,10 @@ def write_results(prediction, confidence, num_classes, nms_conf = 0.4):
             for i in range(idx):
                 #Get the IOUs of all boxes that come after the one we are looking at 
                 #in the loop
-                ious = bbox_iou(image_pred_class[i].unsqueeze(0), image_pred_class[i+1:])                
+                try:
+                    ious = bbox_iou(image_pred_class[i].unsqueeze(0), image_pred_class[i+1:])                
+                except:
+                    continue
                 #Zero out all the detections that have IoU > treshhold
                 iou_mask = (ious < nms_conf).float().unsqueeze(1)
                 image_pred_class[i+1:] *= iou_mask       
