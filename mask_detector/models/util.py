@@ -140,8 +140,6 @@ def write_results(prediction, confidence, num_classes, nms_conf = 0.4):
         
         for cls in img_classes:
             #perform NMS
-
-        
             #get the detections with one particular class
             cls_mask = image_pred_*(image_pred_[:,-1] == cls).float().unsqueeze(1)
             class_mask_ind = torch.nonzero(cls_mask[:,-2]).squeeze()
@@ -156,14 +154,7 @@ def write_results(prediction, confidence, num_classes, nms_conf = 0.4):
             for i in range(idx):
                 #Get the IOUs of all boxes that come after the one we are looking at 
                 #in the loop
-                try:
-                    ious = bbox_iou(image_pred_class[i].unsqueeze(0), image_pred_class[i+1:])
-                except ValueError:
-                    break
-            
-                except IndexError:
-                    break
-            
+                ious = bbox_iou(image_pred_class[i].unsqueeze(0), image_pred_class[i+1:])                
                 #Zero out all the detections that have IoU > treshhold
                 iou_mask = (ious < nms_conf).float().unsqueeze(1)
                 image_pred_class[i+1:] *= iou_mask       
@@ -182,10 +173,7 @@ def write_results(prediction, confidence, num_classes, nms_conf = 0.4):
                 out = torch.cat(seq,1)
                 output = torch.cat((output,out))
 
-    try:
         return output
-    except:
-        return 0
 
 def train_iou(prediction, confidence,actual_boxes = None):
     conf_mask = (prediction[:,:,4] > confidence).float().unsqueeze(2)
