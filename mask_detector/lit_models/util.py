@@ -109,7 +109,7 @@ def yolo_loss(logits,y, CUDA = True):
             box_1 = torch.repeat_interleave(box[1],repeats=predictions.size(0))
             box_2 = torch.repeat_interleave(box[2],repeats=predictions.size(0))
             box_3 = torch.repeat_interleave(box[3],repeats=predictions.size(0))
-            box_4 = torch.repeat_interleave(box[4],repeats=predictions.size(0))            
+            box_4 = torch.repeat_interleave(box[4],repeats=predictions.size(0)) 
             loss_x = lambda_coord * mse_loss(predictions[:,0],box_0)
             loss_y = lambda_coord * mse_loss(predictions[:,1],box_1)
             loss_w = lambda_coord * mse_loss(predictions[:,2] - predictions[:,0],box_2-box_0)
@@ -119,13 +119,13 @@ def yolo_loss(logits,y, CUDA = True):
             if CUDA:
                 expected_conf = expected_conf.cuda()
                 expected_noconf = expected_noconf.cuda()
-            loss_conf =  mse_loss(predictions[:,4], expected_conf)  
+            loss_conf =  mse_loss(predictions[:,4], expected_conf)
             loss_noconf =  lambda_noobj*mse_loss(no_predictions[:,4], expected_noconf)
-            loss_cls = (1 / batch_size) * ce_loss(predictions[:,5:], box_4.long())
+            loss_cls = ce_loss(predictions[:,5:], box_4.long())
             loss = loss_x + loss_y + loss_w + loss_h + loss_conf + loss_noconf + loss_cls            
         total_loss = total_loss + loss
-        
-    return total_loss,logits,finals
+    print("loss calculated this batch = ", total_loss/batch_size)    
+    return total_loss/batch_size,logits,finals
 
 
 class SanityCheckCallback(Callback):
