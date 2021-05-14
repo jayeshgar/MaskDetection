@@ -20,4 +20,6 @@ Dataset is well annotated with 3 classes.
     Tried with MASK-RCNN using a pretrained model but could use it properly with PyTorch lightening. So tried to train a __YOLO v3 model__ on custom dataset. 
 
 # Results:
+Couldn't get the model to converge. Though completed the full model development and prediction handling for new data.
 
+<img width="923" alt="Result" src="https://user-images.githubusercontent.com/17312814/118266209-e5204e00-b4d7-11eb-94d7-e5e47ee05f3b.png">
